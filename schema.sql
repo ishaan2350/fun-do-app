@@ -1,0 +1,84 @@
+-- SQL Schema Reference for Fundoo Notes Database
+
+-- Create database
+CREATE DATABASE IF NOT EXISTS fundoo_db;
+USE fundoo_db;
+
+-- 1. USERS TABLE
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    mobile_number VARCHAR(20),
+    verified BOOLEAN DEFAULT FALSE,
+    deleted BOOLEAN DEFAULT FALSE,
+    profile_pic VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 2. NOTES TABLE
+CREATE TABLE IF NOT EXISTS notes (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255),
+    description TEXT,
+    color VARCHAR(50) DEFAULT 'white',
+    pinned BOOLEAN DEFAULT FALSE,
+    archived BOOLEAN DEFAULT FALSE,
+    trashed BOOLEAN DEFAULT FALSE,
+    owner_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_note_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 3. LABELS TABLE
+CREATE TABLE IF NOT EXISTS labels (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_label_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_label_name_user UNIQUE (name, user_id)
+);
+
+-- 4. NOTE LABELS (Many-to-Many Join Table)
+CREATE TABLE IF NOT EXISTS note_labels (
+    note_id BIGINT NOT NULL,
+    label_id BIGINT NOT NULL,
+    PRIMARY KEY (note_id, label_id),
+    CONSTRAINT fk_notelabel_note FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notelabel_label FOREIGN KEY (label_id) REFERENCES labels(id) ON DELETE CASCADE
+);
+
+-- 5. COLLABORATORS TABLE
+CREATE TABLE IF NOT EXISTS collaborators (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    note_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'VIEWER',
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_collaborator_note FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE,
+    CONSTRAINT fk_collaborator_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT uq_note_user_collaborator UNIQUE (note_id, user_id)
+);
+
+-- 6. REMINDERS TABLE
+CREATE TABLE IF NOT EXISTS reminders (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    note_id BIGINT NOT NULL,
+    remind_at TIMESTAMP NOT NULL,
+    notified BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_reminder_note FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE
+);
+
+-- Indexes for performance optimisations
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_notes_owner ON notes(owner_id);
+CREATE INDEX idx_labels_user ON labels(user_id);
+CREATE INDEX idx_collaborators_note ON collaborators(note_id);
+CREATE INDEX idx_reminders_note ON reminders(note_id);

@@ -1,0 +1,13 @@
+# Target directory (Maven build output)
+/target/
+
+# IDE files
+/.idea/
+*.iml
+*.iws
+*.ipr
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

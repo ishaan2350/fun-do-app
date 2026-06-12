@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fundoo Notes - Premium Personal Note Manager</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-mode">
+    <!-- Notifications toast -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="app">
+        <!-- 1. LOGIN / REGISTER CARD (Auth Screen) -->
+        <div id="auth-screen" class="auth-container">
+            <div class="auth-card glass">
+                <div class="auth-logo">
+                    <div class="logo-icon"><i class="fa-regular fa-lightbulb"></i></div>
+                    <h1>Fundoo Notes</h1>
+                    <p>Organize your thoughts beautifully</p>
+                </div>
+                
+                <div class="auth-tabs">
+                    <button id="tab-login" class="tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
+                    <button id="tab-register" class="tab-btn" onclick="switchAuthTab('register')">Sign Up</button>
+                </div>
+
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="input-group">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" id="login-email" placeholder="Email Address" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="login-password" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span>Sign In</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    </button>
+                </form>
+
+                <!-- Register Form -->
+                <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="reg-firstname" placeholder="First Name" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="fa-regular fa-user"></i>
+                            <input type="text" id="reg-lastname" placeholder="Last Name" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" id="reg-email" placeholder="Email Address" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-phone"></i>
+                        <input type="text" id="reg-mobile" placeholder="Mobile Number" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="reg-password" placeholder="Password (Min 8 chars, mixed cases, 1 special)" required>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span>Create Account</span> <i class="fa-solid fa-user-plus"></i>
+                    </button>
+                </form>
+                
+                <!-- Email Verification Banner (Simulated Mode Helper) -->
+                <div id="activation-helper" class="helper-banner hidden">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <p>Since mail servers are disabled locally, look at the **IntelliJ console log** for your verification token, and verify below:</p>
+                    <div class="verify-inline-group">
+                        <input type="text" id="verify-token-input" placeholder="Paste verification token here">
+                        <button onclick="handleVerifyInline()" class="verify-btn">Verify Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. MAIN DASHBOARD SCREEN -->
+        <div id="dashboard-screen" class="dashboard-container hidden">
+            <!-- Header bar -->
+            <header class="glass">
+                <div class="header-left">
+                    <div class="menu-trigger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
+                    <div class="logo">
+                        <i class="fa-regular fa-lightbulb"></i>
+                        <span>Fundoo Notes</span>
+                    </div>
+                </div>
+                <div class="header-center">
+                    <div class="search-bar">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="search-input" placeholder="Search notes by title or content..." oninput="handleSearch(this.value)">
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="user-profile">
+                        <span id="user-display-name">John Doe</span>
+                        <div class="profile-avatar"><i class="fa-regular fa-user"></i></div>
+                    </div>
+                    <button class="logout-btn" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                </div>
+            </header>
+
+            <!-- Workspace Body -->
+            <div class="workspace">
+                <!-- Sidebar -->
+                <aside id="sidebar" class="sidebar glass">
+                    <nav>
+                        <button id="nav-notes" class="nav-item active" onclick="switchNav('notes')">
+                            <i class="fa-regular fa-lightbulb"></i> <span>Notes</span>
+                        </button>
+                        
+                        <!-- Dynamic Labels insertion point -->
+                        <div id="sidebar-labels-container"></div>
+                        
+                        <button id="nav-edit-labels" class="nav-item" onclick="openLabelsModal()">
+                            <i class="fa-solid fa-pen"></i> <span>Edit Labels</span>
+                        </button>
+                        <button id="nav-archive" class="nav-item" onclick="switchNav('archive')">
+                            <i class="fa-solid fa-box-archive"></i> <span>Archive</span>
+                        </button>
+                        <button id="nav-trash" class="nav-item" onclick="switchNav('trash')">
+                            <i class="fa-regular fa-trash-can"></i> <span>Trash</span>
+                        </button>
+                    </nav>
+                    <div class="sidebar-footer">
+                        <p>Fundoo Premium v1.0</p>
+                    </div>
+                </aside>
+
+                <!-- Content Panel -->
+                <main class="content-panel">
+                    <!-- Note Creator (Only visible in Notes view) -->
+                    <div id="note-creator-wrapper" class="note-creator-container">
+                        <!-- Collapsed form -->
+                        <div id="note-creator-collapsed" class="note-creator-collapsed glass" onclick="expandNoteCreator()">
+                            <span>Take a note...</span>
+                            <div class="creator-collapsed-actions">
+                                <i class="fa-regular fa-square-check"></i>
+                                <i class="fa-regular fa-image"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Expanded form -->
+                        <div id="note-creator-expanded" class="note-creator-expanded glass hidden">
+                            <input type="text" id="note-title" placeholder="Title">
+                            <textarea id="note-description" placeholder="Take a note..." rows="3" oninput="autoGrowTextarea(this)"></textarea>
+                            
+                            <!-- Control Panel -->
+                            <div class="creator-controls">
+                                <div class="creator-actions-left">
+                                    <!-- Color Picker -->
+                                    <div class="color-picker-trigger">
+                                        <i class="fa-solid fa-palette"></i>
+                                        <div class="color-palette">
+                                            <div class="color-option white" style="background-color: #ffffff;" onclick="selectCreatorColor('white', '#ffffff')"></div>
+                                            <div class="color-option blue" style="background-color: #e8f0fe;" onclick="selectCreatorColor('blue', '#e8f0fe')"></div>
+                                            <div class="color-option green" style="background-color: #e6f4ea;" onclick="selectCreatorColor('green', '#e6f4ea')"></div>
+                                            <div class="color-option yellow" style="background-color: #fef7e0;" onclick="selectCreatorColor('yellow', '#fef7e0')"></div>
+                                            <div class="color-option red" style="background-color: #fce8e6;" onclick="selectCreatorColor('red', '#fce8e6')"></div>
+                                            <div class="color-option purple" style="background-color: #f3e8fd;" onclick="selectCreatorColor('purple', '#f3e8fd')"></div>
+                                            <div class="color-option orange" style="background-color: #feefe3;" onclick="selectCreatorColor('orange', '#feefe3')"></div>
+                                            <div class="color-option pink" style="background-color: #ffebf3;" onclick="selectCreatorColor('pink', '#ffebf3')"></div>
+                                        </div>
+                                    </div>
+                                    <i class="fa-regular fa-image" title="Add Image (Coming Soon)"></i>
+                                </div>
+                                <div class="creator-actions-right">
+                                    <button class="close-creator-btn" onclick="collapseNoteCreator(true)">Add Note</button>
+                                    <button class="cancel-creator-btn" onclick="collapseNoteCreator(false)">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Note Lists Grid -->
+                    <div class="notes-grid-container">
+                        <!-- Pinned Section -->
+                        <div id="pinned-section" class="note-section hidden">
+                            <h3>PINNED</h3>
+                            <div id="pinned-notes-grid" class="notes-grid"></div>
+                        </div>
+
+                        <!-- Notes Section -->
+                        <div id="other-section" class="note-section">
+                            <h3 id="section-title">NOTES</h3>
+                            <div id="notes-grid" class="notes-grid"></div>
+                            
+                            <!-- Empty State View -->
+                            <div id="empty-state" class="empty-state">
+                                <i class="fa-regular fa-lightbulb"></i>
+                                <h3>Your notes will appear here</h3>
+                                <p>Start creating notes to organize your life!</p>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT NOTE MODAL -->
+    <div id="edit-note-modal" class="modal-overlay hidden" onclick="handleModalOverlayClick(event, 'edit-note-modal')">
+        <div id="edit-modal-card" class="modal-card glass">
+            <input type="text" id="edit-note-title" placeholder="Title">
+            <textarea id="edit-note-description" placeholder="Note" rows="4"></textarea>
+            
+            <div class="modal-info-bar">
+                <div id="modal-collaborators-list" class="mini-avatar-row"></div>
+                <div id="modal-labels-list" class="mini-labels-row"></div>
+            </div>
+            
+            <div class="modal-controls">
+                <div class="modal-actions-left">
+                    <div class="color-picker-trigger">
+                        <i class="fa-solid fa-palette" title="Change Color"></i>
+                        <div class="color-palette">
+                            <div class="color-option white" style="background-color: #ffffff;" onclick="selectEditColor('white')"></div>
+                            <div class="color-option blue" style="background-color: #e8f0fe;" onclick="selectEditColor('blue')"></div>
+                            <div class="color-option green" style="background-color: #e6f4ea;" onclick="selectEditColor('green')"></div>
+                            <div class="color-option yellow" style="background-color: #fef7e0;" onclick="selectEditColor('yellow')"></div>
+                            <div class="color-option red" style="background-color: #fce8e6;" onclick="selectEditColor('red')"></div>
+                            <div class="color-option purple" style="background-color: #f3e8fd;" onclick="selectEditColor('purple')"></div>
+                            <div class="color-option orange" style="background-color: #feefe3;" onclick="selectEditColor('orange')"></div>
+                            <div class="color-option pink" style="background-color: #ffebf3;" onclick="selectEditColor('pink')"></div>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-user-plus" title="Collaborators" onclick="openCollaboratorsModalFromEdit()"></i>
+                    <i class="fa-solid fa-tags" title="Change Labels" onclick="toggleLabelDropdown()"></i>
+                    
+                    <!-- Label dropdown inside edit note modal -->
+                    <div id="note-label-dropdown" class="label-dropdown hidden">
+                        <h4>Label Note</h4>
+                        <div id="note-label-options" class="label-options-list"></div>
+                    </div>
+                    
+                    <i class="fa-regular fa-trash-can" title="Delete Note" onclick="handleDeleteFromEdit()"></i>
+                </div>
+                <div class="modal-actions-right">
+                    <button class="save-modal-btn" onclick="saveEditNote()">Save</button>
+                    <button class="close-modal-btn" onclick="closeEditNoteModal()">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT LABELS MODAL -->
+    <div id="labels-modal" class="modal-overlay hidden" onclick="handleModalOverlayClick(event, 'labels-modal')">
+        <div class="modal-card glass small-modal">
+            <div class="modal-header">
+                <h3>Edit labels</h3>
+                <button class="modal-close-icon" onclick="closeLabelsModal()">&times;</button>
+            </div>
+            
+            <div class="create-label-input-group">
+                <input type="text" id="new-label-name" placeholder="Create new label...">
+                <button onclick="handleCreateLabel()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+            
+            <div id="labels-edit-list" class="labels-edit-list">
+                <!-- Labels dynamically rendered here -->
+            </div>
+            
+            <div class="modal-footer">
+                <button class="close-modal-btn" onclick="closeLabelsModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- COLLABORATORS MODAL -->
+    <div id="collaborators-modal" class="modal-overlay hidden" onclick="handleModalOverlayClick(event, 'collaborators-modal')">
+        <div class="modal-card glass medium-modal">
+            <div class="modal-header">
+                <h3>Collaborators</h3>
+                <button class="modal-close-icon" onclick="closeCollaboratorsModal()">&times;</button>
+            </div>
+            
+            <div class="collaborators-content">
+                <div class="owner-display">
+                    <div class="owner-avatar"><i class="fa-regular fa-user"></i></div>
+                    <div class="owner-details">
+                        <span class="owner-name" id="collab-owner-name">John Doe (Owner)</span>
+                        <span class="owner-email" id="collab-owner-email">john@example.com</span>
+                    </div>
+                </div>
+                
+                <div id="collaborators-list-container" class="collaborators-list">
+                    <!-- Collaborators dynamically listed here -->
+                </div>
+                
+                <div class="add-collab-section">
+                    <input type="email" id="new-collab-email" placeholder="Person or email to share with">
+                    <select id="new-collab-role">
+                        <option value="VIEWER">Can view</option>
+                        <option value="EDITOR">Can edit</option>
+                    </select>
+                    <button class="add-collab-btn" onclick="handleAddCollaborator()"><i class="fa-solid fa-check"></i></button>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="close-modal-btn" onclick="closeCollaboratorsModal()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script File -->
+    <script src="app.js"></script>
+</body>
+</html>
