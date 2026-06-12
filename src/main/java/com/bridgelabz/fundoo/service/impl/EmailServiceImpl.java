@@ -3,6 +3,7 @@ package com.bridgelabz.fundoo.service.impl;
 import com.bridgelabz.fundoo.service.interfaces.EmailService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,9 @@ public class EmailServiceImpl implements EmailService {
     private static final Logger log = LoggerFactory.getLogger(EmailServiceImpl.class);
     private final JavaMailSender mailSender;
 
+    @Value("${spring.mail.username}")
+    private String fromEmail;
+
     public EmailServiceImpl(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
@@ -20,9 +24,16 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendVerificationEmail(String to, String token) {
         String verificationUrl = "http://localhost:8080/api/v1/users/verify-email?token=" + token;
-        String message = "Please click the following link to activate your Fundoo Notes account:\n" + verificationUrl;
+        String message = "Hello,\n\n" +
+                "Welcome to Fundoo!\n\n" +
+                "You have successfully registered an account in the Fundoo application.\n\n" +
+                "To complete your registration and activate your account, please click the verification link below:\n" +
+                verificationUrl + "\n\n" +
+                "Best regards,\n" +
+                "Fundoo Application Owner";
+        
         log.info("[DEVELOPER MODE] Verification token for {}: {}", to, token);
-        sendEmail(to, "Activate Your Fundoo Notes Account", message);
+        sendEmail(to, "Welcome to Fundoo - Registration Successful", message);
     }
 
     @Override
@@ -45,7 +56,8 @@ public class EmailServiceImpl implements EmailService {
             mailMessage.setTo(to);
             mailMessage.setSubject(subject);
             mailMessage.setText(text);
-            mailMessage.setFrom("no-reply@fundoonotes.com");
+            // Dynamically set From to the owner's configured email address
+            mailMessage.setFrom(fromEmail);
             mailSender.send(mailMessage);
             log.info("Email successfully sent to {}", to);
         } catch (Exception e) {
