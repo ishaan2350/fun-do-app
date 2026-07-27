@@ -57,6 +57,14 @@ public class SecurityConfig {
                     "/api/v1/users/forgot-password",
                     "/api/v1/users/reset-password"
                 ).permitAll()
+                // Public static assets for the frontend client SPA
+                .requestMatchers(
+                    "/",
+                    "/index.html",
+                    "/style.css",
+                    "/app.js",
+                    "/favicon.ico"
+                ).permitAll()
                 // Public Swagger/OpenAPI endpoints
                 .requestMatchers(
                     "/v3/api-docs/**",
