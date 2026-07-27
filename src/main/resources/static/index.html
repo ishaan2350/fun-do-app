@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="fundooApp">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,91 +10,146 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- AngularJS CDN -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
     <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark-mode">
-    <!-- Notifications toast -->
+<body class="dark-mode" ng-controller="FundooController" ng-cloak>
+    <!-- Notifications toast container -->
     <div id="toast-container" class="toast-container"></div>
 
     <!-- MAIN APP WRAPPER -->
     <div id="app">
-        <!-- 1. LOGIN / REGISTER CARD (Auth Screen) -->
-        <div id="auth-screen" class="auth-container">
+        
+        <!-- 1. AUTH SCREEN (Sign In, Sign Up, Forgot Password, Reset Password) -->
+        <div id="auth-screen" class="auth-container" ng-show="!token">
             <div class="auth-card glass">
-                <div class="auth-logo">
+                <div class="auth-logo" ng-show="authTab === 'login' || authTab === 'register'">
                     <div class="logo-icon"><i class="fa-regular fa-lightbulb"></i></div>
                     <h1>Fundoo Notes</h1>
                     <p>Organize your thoughts beautifully</p>
                 </div>
-                
-                <div class="auth-tabs">
-                    <button id="tab-login" class="tab-btn active" onclick="switchAuthTab('login')">Sign In</button>
-                    <button id="tab-register" class="tab-btn" onclick="switchAuthTab('register')">Sign Up</button>
+
+                <div class="auth-logo" ng-show="authTab === 'forgot'">
+                    <div class="logo-icon"><i class="fa-solid fa-unlock-keyhole"></i></div>
+                    <h1>Forgot Password</h1>
+                    <p>Reset your account credentials</p>
                 </div>
 
-                <!-- Login Form -->
-                <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+                <div class="auth-logo" ng-show="authTab === 'reset'">
+                    <div class="logo-icon"><i class="fa-solid fa-key"></i></div>
+                    <h1>Reset Password</h1>
+                    <p>Define a new security credential</p>
+                </div>
+                
+                <div class="auth-tabs" ng-show="authTab === 'login' || authTab === 'register'">
+                    <button class="tab-btn" ng-class="{active: authTab === 'login'}" ng-click="switchAuthTab('login')">Sign In</button>
+                    <button class="tab-btn" ng-class="{active: authTab === 'register'}" ng-click="switchAuthTab('register')">Sign Up</button>
+                </div>
+
+                <!-- A. Login Form -->
+                <form class="auth-form" ng-show="authTab === 'login'" ng-submit="handleLogin()">
                     <div class="input-group">
                         <i class="fa-regular fa-envelope"></i>
-                        <input type="email" id="login-email" placeholder="Email Address" required>
+                        <input type="email" ng-model="login.email" placeholder="Email Address" required>
                     </div>
                     <div class="input-group">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="login-password" placeholder="Password" required>
+                        <input type="password" ng-model="login.password" placeholder="Password" required>
                     </div>
+                    
+                    <div style="display: flex; justify-content: space-between; width: 100%; margin-top: -5px;">
+                        <a href="" ng-click="switchAuthTab('forgot')" style="color: var(--accent-blue); font-size: 13px; text-decoration: none; font-weight: 500;">Forgot Password?</a>
+                        <a href="" ng-click="switchAuthTab('reset')" style="color: var(--text-secondary); font-size: 12px; text-decoration: none;">Have a token? Reset</a>
+                    </div>
+                    
                     <button type="submit" class="submit-btn">
                         <span>Sign In</span> <i class="fa-solid fa-arrow-right-to-bracket"></i>
                     </button>
                 </form>
 
-                <!-- Register Form -->
-                <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+                <!-- B. Register Form -->
+                <form class="auth-form" ng-show="authTab === 'register'" ng-submit="handleRegister()">
                     <div class="input-row">
                         <div class="input-group">
                             <i class="fa-regular fa-user"></i>
-                            <input type="text" id="reg-firstname" placeholder="First Name" required>
+                            <input type="text" ng-model="reg.firstName" placeholder="First Name" required>
                         </div>
                         <div class="input-group">
                             <i class="fa-regular fa-user"></i>
-                            <input type="text" id="reg-lastname" placeholder="Last Name" required>
+                            <input type="text" ng-model="reg.lastName" placeholder="Last Name" required>
                         </div>
                     </div>
                     <div class="input-group">
                         <i class="fa-regular fa-envelope"></i>
-                        <input type="email" id="reg-email" placeholder="Email Address" required>
+                        <input type="email" ng-model="reg.email" placeholder="Email Address" required>
                     </div>
                     <div class="input-group">
                         <i class="fa-solid fa-phone"></i>
-                        <input type="text" id="reg-mobile" placeholder="Mobile Number" required>
+                        <input type="text" ng-model="reg.mobileNumber" placeholder="Mobile Number" required>
                     </div>
                     <div class="input-group">
                         <i class="fa-solid fa-lock"></i>
-                        <input type="password" id="reg-password" placeholder="Password (Min 8 chars, mixed cases, 1 special)" required>
+                        <input type="password" ng-model="reg.password" placeholder="Password (Min 8 chars, mixed, 1 special)" required>
                     </div>
                     <button type="submit" class="submit-btn">
                         <span>Create Account</span> <i class="fa-solid fa-user-plus"></i>
                     </button>
                 </form>
+
+                <!-- C. Forgot Password Form -->
+                <form class="auth-form" ng-show="authTab === 'forgot'" ng-submit="handleForgotPassword()">
+                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.4; text-align: center; margin-bottom: 5px;">
+                        Enter your registered email below, and we will email you a password reset token.
+                    </p>
+                    <div class="input-group">
+                        <i class="fa-regular fa-envelope"></i>
+                        <input type="email" ng-model="forgot.email" placeholder="Email Address" required>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span>Send Reset Token</span> <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                    <button type="button" class="cancel-creator-btn" ng-click="switchAuthTab('login')">Back to Sign In</button>
+                </form>
+
+                <!-- D. Reset Password Form -->
+                <form class="auth-form" ng-show="authTab === 'reset'" ng-submit="handleResetPassword()">
+                    <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.4; text-align: center; margin-bottom: 5px;">
+                        Paste the verification token from your email (or logs) and input your new password.
+                    </p>
+                    <div class="input-group">
+                        <i class="fa-solid fa-ticket"></i>
+                        <input type="text" ng-model="reset.token" placeholder="Verification Token" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" ng-model="reset.newPassword" placeholder="New Password" required>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span>Reset Password</span> <i class="fa-solid fa-check"></i>
+                    </button>
+                    <button type="button" class="cancel-creator-btn" ng-click="switchAuthTab('login')">Back to Sign In</button>
+                </form>
                 
-                <!-- Email Verification Banner (Simulated Mode Helper) -->
-                <div id="activation-helper" class="helper-banner hidden">
+                <!-- Simulated Verification banner -->
+                <div class="helper-banner" ng-show="showActivationHelper">
                     <i class="fa-solid fa-circle-info"></i>
-                    <p>Since mail servers are disabled locally, look at the **IntelliJ console log** for your verification token, and verify below:</p>
+                    <p>Since SMTP configuration may not be live, look at the **IntelliJ console log** for your verification token, and paste below:</p>
                     <div class="verify-inline-group">
-                        <input type="text" id="verify-token-input" placeholder="Paste verification token here">
-                        <button onclick="handleVerifyInline()" class="verify-btn">Verify Account</button>
+                        <input type="text" ng-model="activationToken" placeholder="Paste verification token here">
+                        <button ng-click="handleVerifyInline()" class="verify-btn">Verify Account</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. MAIN DASHBOARD SCREEN -->
-        <div id="dashboard-screen" class="dashboard-container hidden">
+        <!-- 2. MAIN DASHBOARD SCREEN (Visible when logged in) -->
+        <div id="dashboard-screen" class="dashboard-container" ng-show="token">
             <!-- Header bar -->
             <header class="glass">
                 <div class="header-left">
-                    <div class="menu-trigger" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
+                    <div class="menu-trigger" ng-click="toggleSidebar()"><i class="fa-solid fa-bars"></i></div>
                     <div class="logo">
                         <i class="fa-regular fa-lightbulb"></i>
                         <span>Fundoo Notes</span>
@@ -103,37 +158,41 @@
                 <div class="header-center">
                     <div class="search-bar">
                         <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="search-input" placeholder="Search notes by title or content..." oninput="handleSearch(this.value)">
+                        <input type="text" ng-model="searchQuery" ng-change="handleSearch()" placeholder="Search notes by title or content...">
                     </div>
                 </div>
                 <div class="header-right">
                     <div class="user-profile">
-                        <span id="user-display-name">John Doe</span>
+                        <span>{{ user.firstName }} {{ user.lastName }}</span>
                         <div class="profile-avatar"><i class="fa-regular fa-user"></i></div>
                     </div>
-                    <button class="logout-btn" onclick="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                    <button class="logout-btn" ng-click="handleLogout()"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
                 </div>
             </header>
 
             <!-- Workspace Body -->
             <div class="workspace">
                 <!-- Sidebar -->
-                <aside id="sidebar" class="sidebar glass">
+                <aside id="sidebar" class="sidebar glass" ng-class="{collapsed: sidebarCollapsed}">
                     <nav>
-                        <button id="nav-notes" class="nav-item active" onclick="switchNav('notes')">
+                        <button class="nav-item" ng-class="{active: currentView === 'notes'}" ng-click="switchNav('notes')">
                             <i class="fa-regular fa-lightbulb"></i> <span>Notes</span>
                         </button>
                         
-                        <!-- Dynamic Labels insertion point -->
-                        <div id="sidebar-labels-container"></div>
+                        <!-- Dynamic Labels insertion -->
+                        <div id="sidebar-labels-container">
+                            <button ng-repeat="lbl in labels" class="nav-item" ng-class="{active: currentView === lbl.id}" ng-click="switchNav(lbl.id)">
+                                <i class="fa-solid fa-tag"></i> <span>{{ lbl.name }}</span>
+                            </button>
+                        </div>
                         
-                        <button id="nav-edit-labels" class="nav-item" onclick="openLabelsModal()">
+                        <button class="nav-item" ng-click="openLabelsModal()">
                             <i class="fa-solid fa-pen"></i> <span>Edit Labels</span>
                         </button>
-                        <button id="nav-archive" class="nav-item" onclick="switchNav('archive')">
+                        <button class="nav-item" ng-class="{active: currentView === 'archive'}" ng-click="switchNav('archive')">
                             <i class="fa-solid fa-box-archive"></i> <span>Archive</span>
                         </button>
-                        <button id="nav-trash" class="nav-item" onclick="switchNav('trash')">
+                        <button class="nav-item" ng-class="{active: currentView === 'trash'}" ng-click="switchNav('trash')">
                             <i class="fa-regular fa-trash-can"></i> <span>Trash</span>
                         </button>
                     </nav>
@@ -145,9 +204,9 @@
                 <!-- Content Panel -->
                 <main class="content-panel">
                     <!-- Note Creator (Only visible in Notes view) -->
-                    <div id="note-creator-wrapper" class="note-creator-container">
+                    <div class="note-creator-container" ng-show="currentView === 'notes'">
                         <!-- Collapsed form -->
-                        <div id="note-creator-collapsed" class="note-creator-collapsed glass" onclick="expandNoteCreator()">
+                        <div class="note-creator-collapsed glass" ng-show="!creatorExpanded" ng-click="expandCreator()">
                             <span>Take a note...</span>
                             <div class="creator-collapsed-actions">
                                 <i class="fa-regular fa-square-check"></i>
@@ -156,9 +215,9 @@
                         </div>
                         
                         <!-- Expanded form -->
-                        <div id="note-creator-expanded" class="note-creator-expanded glass hidden">
-                            <input type="text" id="note-title" placeholder="Title">
-                            <textarea id="note-description" placeholder="Take a note..." rows="3" oninput="autoGrowTextarea(this)"></textarea>
+                        <div class="note-creator-expanded glass" ng-show="creatorExpanded" ng-style="{'background-color': getHexColor(creatorColor)}" ng-class="{'colored-creator': creatorColor !== 'white'}">
+                            <input type="text" ng-model="newNote.title" placeholder="Title">
+                            <textarea ng-model="newNote.description" placeholder="Take a note..." rows="3" ng-keyup="autoGrowTextarea($event)"></textarea>
                             
                             <!-- Control Panel -->
                             <div class="creator-controls">
@@ -167,21 +226,14 @@
                                     <div class="color-picker-trigger">
                                         <i class="fa-solid fa-palette"></i>
                                         <div class="color-palette">
-                                            <div class="color-option white" style="background-color: #ffffff;" onclick="selectCreatorColor('white', '#ffffff')"></div>
-                                            <div class="color-option blue" style="background-color: #e8f0fe;" onclick="selectCreatorColor('blue', '#e8f0fe')"></div>
-                                            <div class="color-option green" style="background-color: #e6f4ea;" onclick="selectCreatorColor('green', '#e6f4ea')"></div>
-                                            <div class="color-option yellow" style="background-color: #fef7e0;" onclick="selectCreatorColor('yellow', '#fef7e0')"></div>
-                                            <div class="color-option red" style="background-color: #fce8e6;" onclick="selectCreatorColor('red', '#fce8e6')"></div>
-                                            <div class="color-option purple" style="background-color: #f3e8fd;" onclick="selectCreatorColor('purple', '#f3e8fd')"></div>
-                                            <div class="color-option orange" style="background-color: #feefe3;" onclick="selectCreatorColor('orange', '#feefe3')"></div>
-                                            <div class="color-option pink" style="background-color: #ffebf3;" onclick="selectCreatorColor('pink', '#ffebf3')"></div>
+                                            <div ng-repeat="(colorName, hexVal) in COLOR_MAP" class="color-option {{colorName}}" ng-style="{'background-color': hexVal}" ng-click="selectCreatorColor(colorName)"></div>
                                         </div>
                                     </div>
                                     <i class="fa-regular fa-image" title="Add Image (Coming Soon)"></i>
                                 </div>
                                 <div class="creator-actions-right">
-                                    <button class="close-creator-btn" onclick="collapseNoteCreator(true)">Add Note</button>
-                                    <button class="cancel-creator-btn" onclick="collapseNoteCreator(false)">Close</button>
+                                    <button class="close-creator-btn" ng-click="collapseCreator(true)">Add Note</button>
+                                    <button class="cancel-creator-btn" ng-click="collapseCreator(false)">Close</button>
                                 </div>
                             </div>
                         </div>
@@ -190,21 +242,87 @@
                     <!-- Note Lists Grid -->
                     <div class="notes-grid-container">
                         <!-- Pinned Section -->
-                        <div id="pinned-section" class="note-section hidden">
+                        <div class="note-section" ng-show="hasPinnedNotes() && currentView === 'notes' && !searchQuery">
                             <h3>PINNED</h3>
-                            <div id="pinned-notes-grid" class="notes-grid"></div>
+                            <div class="notes-grid">
+                                <div ng-repeat="note in notes | filter:{pinned: true, archived: false, trashed: false}" class="note-card" ng-style="{'background-color': getHexColor(note.color)}" ng-click="openEditNoteModal(note)">
+                                    <button class="pin-card-btn" ng-click="toggleNotePin(note); $event.stopPropagation();">
+                                        <i class="fa-solid fa-thumbtack"></i>
+                                    </button>
+                                    <div class="card-content">
+                                        <h4>{{ note.title || 'Untitled' }}</h4>
+                                        <p>{{ note.description }}</p>
+                                        <div class="mini-labels-row" ng-show="note.labels.length > 0">
+                                            <span ng-repeat="lbl in note.labels" class="label-badge">{{ lbl.name }}</span>
+                                        </div>
+                                        <div class="mini-avatar-row" ng-show="note.collaborators.length > 0">
+                                            <div ng-repeat="c in note.collaborators" class="collab-badge-avatar" title="{{c.email}} ({{c.role}})">
+                                                {{ c.email.charAt(0).toUpperCase() }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-options">
+                                        <div class="card-color-picker" ng-click="$event.stopPropagation();">
+                                            <i class="fa-solid fa-palette" title="Change Color"></i>
+                                            <div class="card-color-palette">
+                                                <div ng-repeat="(colorName, hexVal) in COLOR_MAP" class="color-option {{colorName}}" ng-style="{'background-color': hexVal}" ng-click="updateNoteColor(note.id, colorName)"></div>
+                                            </div>
+                                        </div>
+                                        <i class="fa-solid fa-user-plus" title="Collaborators" ng-click="openCollaboratorsModal(note.id); $event.stopPropagation();"></i>
+                                        <i class="fa-solid fa-box-archive" title="Archive" ng-click="toggleNoteArchive(note); $event.stopPropagation();"></i>
+                                        <i class="fa-regular fa-trash-can delete-icon" title="Trash Note" ng-click="toggleNoteTrash(note); $event.stopPropagation();"></i>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Notes Section -->
-                        <div id="other-section" class="note-section">
-                            <h3 id="section-title">NOTES</h3>
-                            <div id="notes-grid" class="notes-grid"></div>
+                        <div class="note-section">
+                            <h3 id="section-title">{{ getSectionTitle() }}</h3>
+                            <div class="notes-grid">
+                                <div ng-repeat="note in notes | filter:noteFilter" class="note-card" ng-style="{'background-color': getHexColor(note.color)}" ng-click="openEditNoteModal(note)">
+                                    <button class="pin-card-btn" ng-show="!note.trashed" ng-click="toggleNotePin(note); $event.stopPropagation();">
+                                        <i class="fa-solid fa-thumbtack"></i>
+                                    </button>
+                                    <div class="card-content">
+                                        <h4>{{ note.title || 'Untitled' }}</h4>
+                                        <p>{{ note.description }}</p>
+                                        <div class="mini-labels-row" ng-show="note.labels.length > 0">
+                                            <span ng-repeat="lbl in note.labels" class="label-badge">{{ lbl.name }}</span>
+                                        </div>
+                                        <div class="mini-avatar-row" ng-show="note.collaborators.length > 0">
+                                            <div ng-repeat="c in note.collaborators" class="collab-badge-avatar" title="{{c.email}} ({{c.role}})">
+                                                {{ c.email.charAt(0).toUpperCase() }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-options">
+                                        <!-- Actions inside Trash -->
+                                        <div ng-show="note.trashed" style="display: contents;">
+                                            <i class="fa-solid fa-trash-arrow-up" title="Restore Note" ng-click="toggleNoteTrash(note); $event.stopPropagation();"></i>
+                                            <i class="fa-solid fa-trash delete-icon" title="Delete Permanently" ng-click="deletePermanently(note.id); $event.stopPropagation();"></i>
+                                        </div>
+                                        <!-- Actions inside Active/Archived -->
+                                        <div ng-show="!note.trashed" style="display: contents;">
+                                            <div class="card-color-picker" ng-click="$event.stopPropagation();">
+                                                <i class="fa-solid fa-palette" title="Change Color"></i>
+                                                <div class="card-color-palette">
+                                                    <div ng-repeat="(colorName, hexVal) in COLOR_MAP" class="color-option {{colorName}}" ng-style="{'background-color': hexVal}" ng-click="updateNoteColor(note.id, colorName)"></div>
+                                                </div>
+                                            </div>
+                                            <i class="fa-solid fa-user-plus" title="Collaborators" ng-click="openCollaboratorsModal(note.id); $event.stopPropagation();"></i>
+                                            <i class="fa-solid" ng-class="{'fa-box-open': note.archived, 'fa-box-archive': !note.archived}" title="{{note.archived ? 'Unarchive' : 'Archive'}}" ng-click="toggleNoteArchive(note); $event.stopPropagation();"></i>
+                                            <i class="fa-regular fa-trash-can delete-icon" title="Trash Note" ng-click="toggleNoteTrash(note); $event.stopPropagation();"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             
                             <!-- Empty State View -->
-                            <div id="empty-state" class="empty-state">
-                                <i class="fa-regular fa-lightbulb"></i>
-                                <h3>Your notes will appear here</h3>
-                                <p>Start creating notes to organize your life!</p>
+                            <div class="empty-state" ng-show="isEmptyState()">
+                                <i class="fa-regular" ng-class="getEmptyStateIcon()"></i>
+                                <h3>{{ getEmptyStateTitle() }}</h3>
+                                <p>{{ getEmptyStateDesc() }}</p>
                             </div>
                         </div>
                     </div>
@@ -213,15 +331,24 @@
         </div>
     </div>
 
-    <!-- EDIT NOTE MODAL -->
-    <div id="edit-note-modal" class="modal-overlay hidden" onclick="handleModalOverlayClick(event, 'edit-note-modal')">
-        <div id="edit-modal-card" class="modal-card glass">
-            <input type="text" id="edit-note-title" placeholder="Title">
-            <textarea id="edit-note-description" placeholder="Note" rows="4"></textarea>
+    <!-- 3. EDIT NOTE MODAL -->
+    <div id="edit-note-modal" class="modal-overlay" ng-show="editingNote" ng-click="handleOverlayClick($event, 'edit-note-modal')">
+        <div id="edit-modal-card" class="modal-card glass" ng-style="{'background-color': getHexColor(editingNoteColor)}" ng-class="{'colored-creator': editingNoteColor !== 'white'}">
+            <input type="text" ng-model="editingNote.title" placeholder="Title">
+            <textarea ng-model="editingNote.description" placeholder="Note" rows="4"></textarea>
             
             <div class="modal-info-bar">
-                <div id="modal-collaborators-list" class="mini-avatar-row"></div>
-                <div id="modal-labels-list" class="mini-labels-row"></div>
+                <div class="mini-avatar-row">
+                    <div ng-repeat="c in editingNote.collaborators" class="collab-badge-avatar" title="{{c.email}} ({{c.role}})">
+                        {{ c.email.charAt(0).toUpperCase() }}
+                    </div>
+                </div>
+                <div class="mini-labels-row">
+                    <span ng-repeat="l in editingNote.labels" class="label-badge">
+                        <span>{{ l.name }}</span>
+                        <i class="fa-solid fa-xmark" ng-click="detachLabelFromEdit(l.id)"></i>
+                    </span>
+                </div>
             </div>
             
             <div class="modal-controls">
@@ -229,64 +356,67 @@
                     <div class="color-picker-trigger">
                         <i class="fa-solid fa-palette" title="Change Color"></i>
                         <div class="color-palette">
-                            <div class="color-option white" style="background-color: #ffffff;" onclick="selectEditColor('white')"></div>
-                            <div class="color-option blue" style="background-color: #e8f0fe;" onclick="selectEditColor('blue')"></div>
-                            <div class="color-option green" style="background-color: #e6f4ea;" onclick="selectEditColor('green')"></div>
-                            <div class="color-option yellow" style="background-color: #fef7e0;" onclick="selectEditColor('yellow')"></div>
-                            <div class="color-option red" style="background-color: #fce8e6;" onclick="selectEditColor('red')"></div>
-                            <div class="color-option purple" style="background-color: #f3e8fd;" onclick="selectEditColor('purple')"></div>
-                            <div class="color-option orange" style="background-color: #feefe3;" onclick="selectEditColor('orange')"></div>
-                            <div class="color-option pink" style="background-color: #ffebf3;" onclick="selectEditColor('pink')"></div>
+                            <div ng-repeat="(colorName, hexVal) in COLOR_MAP" class="color-option {{colorName}}" ng-style="{'background-color': hexVal}" ng-click="selectEditColor(colorName)"></div>
                         </div>
                     </div>
-                    <i class="fa-solid fa-user-plus" title="Collaborators" onclick="openCollaboratorsModalFromEdit()"></i>
-                    <i class="fa-solid fa-tags" title="Change Labels" onclick="toggleLabelDropdown()"></i>
+                    <i class="fa-solid fa-user-plus" title="Collaborators" ng-click="openCollaboratorsModalFromEdit()"></i>
+                    <i class="fa-solid fa-tags" title="Change Labels" ng-click="toggleLabelDropdown()"></i>
                     
                     <!-- Label dropdown inside edit note modal -->
-                    <div id="note-label-dropdown" class="label-dropdown hidden">
+                    <div id="note-label-dropdown" class="label-dropdown" ng-show="showingLabelDropdown">
                         <h4>Label Note</h4>
-                        <div id="note-label-options" class="label-options-list"></div>
+                        <div class="label-options-list">
+                            <label ng-repeat="lbl in labels" class="label-option-checkbox">
+                                <input type="checkbox" ng-checked="isLabelAttached(lbl.id)" ng-change="handleLabelToggle(lbl.id, checkedState)" ng-model="checkedState">
+                                <span>{{ lbl.name }}</span>
+                            </label>
+                        </div>
                     </div>
                     
-                    <i class="fa-regular fa-trash-can" title="Delete Note" onclick="handleDeleteFromEdit()"></i>
+                    <i class="fa-regular fa-trash-can" title="Delete Note" ng-click="handleDeleteFromEdit()"></i>
                 </div>
                 <div class="modal-actions-right">
-                    <button class="save-modal-btn" onclick="saveEditNote()">Save</button>
-                    <button class="close-modal-btn" onclick="closeEditNoteModal()">Close</button>
+                    <button class="save-modal-btn" ng-click="saveEditNote()">Save</button>
+                    <button class="close-modal-btn" ng-click="closeEditNoteModal()">Close</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- EDIT LABELS MODAL -->
-    <div id="labels-modal" class="modal-overlay hidden" onclick="handleModalOverlayClick(event, 'labels-modal')">
+    <!-- 4. EDIT LABELS MODAL -->
+    <div id="labels-modal" class="modal-overlay" ng-show="showingLabelsModal" ng-click="handleOverlayClick($event, 'labels-modal')">
         <div class="modal-card glass small-modal">
             <div class="modal-header">
                 <h3>Edit labels</h3>
-                <button class="modal-close-icon" onclick="closeLabelsModal()">&times;</button>
+                <button class="modal-close-icon" ng-click="closeLabelsModal()">&times;</button>
             </div>
             
             <div class="create-label-input-group">
-                <input type="text" id="new-label-name" placeholder="Create new label...">
-                <button onclick="handleCreateLabel()"><i class="fa-solid fa-plus"></i></button>
+                <input type="text" ng-model="newLabelName" placeholder="Create new label...">
+                <button ng-click="handleCreateLabel()"><i class="fa-solid fa-plus"></i></button>
             </div>
             
-            <div id="labels-edit-list" class="labels-edit-list">
-                <!-- Labels dynamically rendered here -->
+            <div class="labels-edit-list">
+                <div ng-repeat="lbl in labels" class="labels-edit-item">
+                    <input type="text" ng-model="lbl.name" ng-change="handleUpdateLabelName(lbl)">
+                    <div class="labels-edit-actions">
+                        <i class="fa-regular fa-trash-can delete-label-icon" ng-click="handleDeleteLabel(lbl.id)"></i>
+                    </div>
+                </div>
             </div>
             
             <div class="modal-footer">
-                <button class="close-modal-btn" onclick="closeLabelsModal()">Done</button>
+                <button class="close-modal-btn" ng-click="closeLabelsModal()">Done</button>
             </div>
         </div>
     </div>
 
-    <!-- COLLABORATORS MODAL -->
-    <div id="collaborators-modal" class="modal-overlay hidden" onclick="handleModalOverlayClick(event, 'collaborators-modal')">
+    <!-- 5. COLLABORATORS MODAL -->
+    <div id="collaborators-modal" class="modal-overlay" ng-show="showingCollaboratorsModal" ng-click="handleOverlayClick($event, 'collaborators-modal')">
         <div class="modal-card glass medium-modal">
             <div class="modal-header">
                 <h3>Collaborators</h3>
-                <button class="modal-close-icon" onclick="closeCollaboratorsModal()">&times;</button>
+                <button class="modal-close-icon" ng-click="closeCollaboratorsModal()">&times;</button>
             </div>
             
             <div class="collaborators-content">
@@ -298,27 +428,33 @@
                     </div>
                 </div>
                 
-                <div id="collaborators-list-container" class="collaborators-list">
-                    <!-- Collaborators dynamically listed here -->
+                <div class="collaborators-list">
+                    <div ng-repeat="c in collaborators" class="collaborator-item">
+                        <div class="collab-details">
+                            <span class="collab-email">{{ c.email }}</span>
+                            <span class="collab-role">{{ c.role }}</span>
+                        </div>
+                        <button class="delete-collab-btn" ng-click="handleRemoveCollaborator(c.id)">
+                            <i class="fa-regular fa-trash-can"></i>
+                        </button>
+                    </div>
+                    <p style="font-size: 13px; color: var(--text-muted); text-align: center; padding: 10px;" ng-show="collaborators.length === 0">Not shared with anyone yet</p>
                 </div>
                 
                 <div class="add-collab-section">
-                    <input type="email" id="new-collab-email" placeholder="Person or email to share with">
-                    <select id="new-collab-role">
+                    <input type="email" ng-model="newCollab.email" placeholder="Person or email to share with">
+                    <select ng-model="newCollab.role">
                         <option value="VIEWER">Can view</option>
                         <option value="EDITOR">Can edit</option>
                     </select>
-                    <button class="add-collab-btn" onclick="handleAddCollaborator()"><i class="fa-solid fa-check"></i></button>
+                    <button class="add-collab-btn" ng-click="handleAddCollaborator()"><i class="fa-solid fa-check"></i></button>
                 </div>
             </div>
             
             <div class="modal-footer">
-                <button class="close-modal-btn" onclick="closeCollaboratorsModal()">Done</button>
+                <button class="close-modal-btn" ng-click="closeCollaboratorsModal()">Done</button>
             </div>
         </div>
     </div>
-
-    <!-- Script File -->
-    <script src="app.js"></script>
 </body>
 </html>
