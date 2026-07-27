@@ -18,7 +18,13 @@ app.controller('FundooController', ['$scope', '$http', '$timeout', '$window', fu
 
     // --- APPLICATION STATE ---
     $scope.token = $window.localStorage.getItem('fundoo_token') || null;
-    $scope.user = JSON.parse($window.localStorage.getItem('fundoo_user')) || null;
+    try {
+        const storedUser = $window.localStorage.getItem('fundoo_user');
+        $scope.user = (storedUser && storedUser !== 'undefined') ? JSON.parse(storedUser) : null;
+    } catch (e) {
+        $scope.user = null;
+        console.error('Failed to parse cached user data:', e);
+    }
     $scope.notes = [];
     $scope.labels = [];
     $scope.currentView = 'notes'; // 'notes', 'archive', 'trash', or labelId (number)
