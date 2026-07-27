@@ -63,6 +63,7 @@ public class SecurityConfig {
                     "/index.html",
                     "/style.css",
                     "/app.js",
+                    "/angular.min.js",
                     "/favicon.ico"
                 ).permitAll()
                 // Public Swagger/OpenAPI endpoints
